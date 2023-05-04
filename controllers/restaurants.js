@@ -28,6 +28,9 @@ exports.getRestaurants = async (req, res, next) => {
       query = query.sort('-createdAt');
     }
 
+    //sponsored sort
+    query.sort({isSporsored: -1});
+
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 25;
     const startIndex = (page - 1) * limit;
@@ -88,10 +91,14 @@ exports.createRestaurant = async (req, res, next) => {
 
 exports.updateRestaurant = async (req, res, next) => {
   try {
-    const restaurant = await Restaurant.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!restaurant) {
       return res.status(400).json({success: false});
@@ -118,3 +125,32 @@ exports.deleteRestaurant = async (req, res, next) => {
   }
 };
 
+exports.setIsSponsered = async (req, res, next) => {
+  try {
+    let isSponsored;
+    if (req.body.isSporsored === true) {
+      isSponsored = true;
+    } else if (req.body.isSponsored === false) {
+      isSponsored = false;
+    } else {
+      return res.json({message: 'can be only boolean value'});
+    }
+
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      req.params.id,
+      {isSponsored: req.body.isSponsored},
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!restaurant) {
+      return res.status(400).json({success: false});
+    }
+
+    res.status(200).json({success: true, data: restaurant});
+  } catch (err) {
+    res.status(400).json({success: false});
+  }
+};

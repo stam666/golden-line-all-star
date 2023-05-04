@@ -28,9 +28,10 @@ const UserSchema = new mongoose.Schema({
   tel: {
     type: String,
     required: [true, 'Please add a telephone number'],
+    default: '0123456789',
     // match: [/^[0-9]{10,10}$/, 'Please add a invalid telephone number'],
-    minlength: [10, 'Please add a invalid telephone number'],
-    maxlength: [10, 'Please add a invalid telephone number'],
+    // minlength: [10, 'Please add a invalid telephone number'],
+    // maxlength: [10, 'Please add a invalid telephone number'],
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,

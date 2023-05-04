@@ -20,15 +20,17 @@ const RestaurantSchema = new mongoose.Schema(
       type: Number,
       min: 0,
       max: 24,
-      required: [true, "Please add a opening hours"],
       default: 8,
     },
     close: {
       type: Number,
       min: 0,
       max: 24,
-      required: [true, "Please add a closing hour"],
       default: 16,
+    },
+    isSponsored: {
+      type: Boolean,
+      default: false,
     },
   },
   {

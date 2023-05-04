@@ -5,6 +5,7 @@ const {
   createRestaurant,
   updateRestaurant,
   deleteRestaurant,
+  setIsSponsered,
 } = require('../controllers/restaurants');
 const {protect, authorize} = require('../middleware/auth');
 
@@ -21,7 +22,8 @@ router
   .route('/:id')
   .get(getRestaurant)
   .put(protect, authorize('admin'), updateRestaurant)
-  .delete(protect, authorize('admin'), deleteRestaurant);
+  .delete(protect, authorize('admin'), deleteRestaurant)
+  .patch(protect, authorize('admin'), setIsSponsered);
 
 module.exports = router;
 
@@ -183,4 +185,34 @@ module.exports = router;
 *       404:
 *         description: The restaurant was not found
 */
-
+/**
+* @swagger
+* /restaurants/{id}:
+*   patch:
+*     summary: set isSponsored by id
+*     tags: [Restaurants]
+*     parameters:
+*       - in: path
+*         name: id
+*         schema:
+*           type: string
+*         required: true
+*         description: The restaurant id
+*     requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             required:
+*               - isSponsored
+*             properties:
+*               isSponsored:
+*                 type: boolean
+*                 example: true
+*     responses:
+*       200:
+*         description: The restaurant was deleted
+*       404:
+*         description: The restaurant was not found
+*/
