@@ -18,7 +18,7 @@ connectDB();
 
 const auth = require('./routes/auth');
 const restaurants = require('./routes/restaurants');
-const reserves = require('./routes/reserves');
+const reservations = require('./routes/reservations');
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 mins
   max: 100,
@@ -55,7 +55,7 @@ app.use(hpp());
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/restaurants', restaurants);
-app.use('/api/v1/reserves', reserves);
+app.use('/api/v1/reservations', reservations);
 
 const PORT = process.env.PORT || 5000;
 

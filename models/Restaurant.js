@@ -38,13 +38,13 @@ const RestaurantSchema = new mongoose.Schema(
 );
 
 RestaurantSchema.pre('remove', async function (next) {
-  console.log(`Reserves being removed from from restaurant ${this._id}`);
-  await this.model('Reserve').deleteMany({restaurant: this._id});
+  console.log(`Reservations being removed from from restaurant ${this._id}`);
+  await this.model('Reservation').deleteMany({restaurant: this._id});
   next();
 });
 
-RestaurantSchema.virtual('reserves', {
-  ref: 'Reserve',
+RestaurantSchema.virtual('reservations', {
+  ref: 'Reservation',
   localField: '_id',
   foreignField: 'restaurant',
   justOne: false,

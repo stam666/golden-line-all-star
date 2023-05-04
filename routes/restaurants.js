@@ -9,9 +9,9 @@ const {
 const {protect, authorize} = require('../middleware/auth');
 
 const router = express.Router();
-const reserveRouter = require('./reserves');
+const reservationRouter = require('./reservations');
 
-router.use('/:restaurantId/reserves', reserveRouter);
+router.use('/:restaurantId/reservations', reservationRouter);
 
 router
   .route('/')
