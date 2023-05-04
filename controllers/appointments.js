@@ -1,18 +1,18 @@
 const Appointment = require('../models/Appointment');
-const Hospital = require('../models/Hospital');
+const Restaurant = require('../models/Restaurant');
 
 exports.getAppointments = async (req, res, next) => {
   let query;
 
   if (req.query.role !== 'admin') {
     query = Appointment.find({user: req.user.id}).populate({
-      path: 'hospital',
-      select: 'name province tel',
+      path: 'restaurant',
+      select: 'name tel open close',
     });
   } else {
     query = Appointment.find().populate({
-      path: 'hospital',
-      select: 'name province tel',
+      path: 'restaurant',
+      select: 'name tel open close',
     });
   }
 
@@ -36,8 +36,8 @@ exports.getAppointments = async (req, res, next) => {
 exports.getAppointment = async (req, res, next) => {
   try {
     const appointment = await Appointment.findById(req.params.id).populate({
-      path: 'hospital',
-      select: 'name description tel',
+      path: 'restaurant',
+      select: 'name tel open close',
     });
 
     if (!appointment) {
@@ -72,14 +72,14 @@ exports.addAppointment = async (req, res, next) => {
       });
     }
 
-    req.body.hospital = req.params.hospitalId;
+    req.body.restaurant = req.params.restaurantId;
 
-    const hospital = await Hospital.findById(req.params.hospitalId);
+    const restaurant = await Restaurant.findById(req.params.restaurantId);
 
-    if (!hospital) {
+    if (!restaurant) {
       return res.status(404).json({
         success: false,
-        message: `No hospital with the id of ${req.params.hospitalId}`,
+        message: `No restaurant with the id of ${req.params.restaurantId}`,
       });
     }
 

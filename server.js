@@ -17,7 +17,7 @@ dotenv.config({path: './config/config.env'});
 connectDB();
 
 const auth = require('./routes/auth');
-const hospitals = require('./routes/hospitals');
+const restaurants = require('./routes/restaurants');
 const appointments = require('./routes/appointments');
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 mins
@@ -54,7 +54,7 @@ app.use(hpp());
 
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 app.use('/api/v1/auth', auth);
-app.use('/api/v1/hospitals', hospitals);
+app.use('/api/v1/restaurants', restaurants);
 app.use('/api/v1/appointments', appointments);
 
 const PORT = process.env.PORT || 5000;
