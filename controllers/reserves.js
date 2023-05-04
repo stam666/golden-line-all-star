@@ -7,12 +7,12 @@ exports.getReserves = async (req, res, next) => {
   if (req.query.role !== 'admin') {
     query = Reserve.find({user: req.user.id}).populate({
       path: 'restaurant',
-      select: 'name tel open close',
+      select: 'name address tel open close',
     });
   } else {
     query = Reserve.find().populate({
       path: 'restaurant',
-      select: 'name tel open close',
+      select: 'name address tel open close',
     });
   }
 
@@ -37,7 +37,7 @@ exports.getReserve = async (req, res, next) => {
   try {
     const reserve = await Reserve.findById(req.params.id).populate({
       path: 'restaurant',
-      select: 'name tel open close',
+      select: 'name address tel open close',
     });
 
     if (!reserve) {

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ReserveSchema = new mongoose.Schema({
-  apptDate: {
+  rsvDate: {
     type: Date,
     required: true,
   },
