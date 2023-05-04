@@ -20,6 +20,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     _id: user._id,
     name: user.name,
     email: user.email,
+    phoneNumber: user.phoneNumber,
     //end for frontend
 
     token,
@@ -28,12 +29,13 @@ const sendTokenResponse = (user, statusCode, res) => {
 
 exports.register = async (req, res, next) => {
   try {
-    const {name, email, password, role} = req.body;
+    const {name, email, password, phoneNumber, role} = req.body;
 
     const user = await User.create({
       name,
       email,
       password,
+      phoneNumber,
       role,
     });
 
