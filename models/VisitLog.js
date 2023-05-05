@@ -1,16 +1,17 @@
 const mongoose = require('mongoose');
 
 const VisitLogSchema = new mongoose.Schema({
-//   user: {
-//     type: mongoose.Schema.ObjectId,
-//     ref: 'User',
-//   },
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   restaurant: {
     type: mongoose.Schema.ObjectId,
     ref: 'Restaurant',
     required: true,
   },
-  createAt: {
+  createdAt: {
     type: Date,
     default: Date.now,
   },

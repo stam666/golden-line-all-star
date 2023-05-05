@@ -1,6 +1,8 @@
 const Restaurant = require('../models/Restaurant.js');
 const User = require('../models/User.js');
 const VisitLog = require('../models/VisitLog.js');
+const mongoose = require('mongoose');
+const {Configuration, OpenAIApi} = require('openai');
 
 exports.getRestaurants = async (req, res, next) => {
   try {
@@ -76,8 +78,11 @@ exports.getRestaurant = async (req, res, next) => {
     if (!restaurant) {
       return res.status(400).json({success: false});
     }
-    
-    await VisitLog.create({restaurant: req.params.id});
+
+    await VisitLog.create({
+      restaurant: req.params.id,
+      user: req.body.userID ? req.body.userID : null,
+    });
 
     res.status(200).json({success: true, data: restaurant});
   } catch (err) {
@@ -147,6 +152,134 @@ exports.setIsSponsered = async (req, res, next) => {
 
     res.status(200).json({success: true, data: restaurant});
   } catch (err) {
+    res.status(400).json({success: false});
+  }
+};
+
+exports.getRestaurantStat = async (req, res) => {
+  try {
+    const restaurantId = req.params.id;
+    const allVisitors = await VisitLog.countDocuments({
+      restaurant: mongoose.Types.ObjectId(restaurantId),
+    });
+
+    const lastMonthVisitors = await VisitLog.countDocuments({
+      restaurant: mongoose.Types.ObjectId(restaurantId),
+      createdAt: {$gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)},
+    });
+    const lastWeekVisitors = await VisitLog.countDocuments({
+      restaurant: mongoose.Types.ObjectId(restaurantId),
+      createdAt: {$gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)},
+    });
+
+    const topVisitors = await VisitLog.aggregate([
+      {$match: {restaurant: mongoose.Types.ObjectId(restaurantId)}},
+      {$group: {_id: '$user', count: {$sum: 1}}},
+      {$sort: {count: -1}},
+      {$limit: 3},
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {$unwind: '$user'},
+      {$project: {_id: 0, user: {name: 1, email: 1}, count: 1}},
+    ]);
+
+    res.json({
+      allVisitors,
+      lastMonthVisitors,
+      lastWeekVisitors,
+      topVisitors,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message: err.message});
+  }
+};
+
+exports.getAllRestaurantsStat = async (req, res) => {
+  try {
+    const result = await VisitLog.aggregate([
+      {
+        $match: {user: {$ne: null}},
+      },
+      {
+        $group: {
+          _id: {restaurant: '$restaurant', user: '$user'},
+          count: {$sum: 1},
+        },
+      },
+      {$sort: {'_id.restaurant': 1, count: -1}},
+      {
+        $group: {
+          _id: '$_id.restaurant',
+          users: {$push: {user: '$_id.user', count: '$count'}},
+        },
+      },
+      {
+        $lookup: {
+          from: 'restaurants',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'restaurant',
+        },
+      },
+      {$unwind: '$restaurant'},
+      {
+        $project: {
+          _id: 0,
+          restaurant: '$restaurant.name',
+          users: {$slice: ['$users', 3]},
+          totalVisitors: {$sum: '$users.count'},
+        },
+      },
+      {$sort: {totalVisitors: -1}},
+    ]);
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message: err.message});
+  }
+};
+
+exports.randomMenu = async (req, res, next) => {
+  const ingredient = req.body.ingredient;
+  try {
+    const configuration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
+    let conversationLog = [
+      {
+        role: 'system',
+        content:
+          'You are a chef chatbot who will recommend the food from ingredient and return into a list of 5 foods (including Thai, Italian, Japanese, Chinese).',
+      },
+    ];
+    conversationLog.push({
+      role: 'user',
+      content: ingredient,
+    });
+
+    const result = await openai
+      .createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: conversationLog,
+        max_tokens: 2000, // limit token usage
+      })
+      .catch((error) => {
+        console.log(`OPENAI ERR: ${error}`);
+      });
+    res
+      .status(200)
+      .json({success: true, data: result.data.choices[0].message.content});
+  } catch (err) {
+    console.log(err);
     res.status(400).json({success: false});
   }
 };

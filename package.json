@@ -21,8 +21,11 @@
     "helmet": "^6.0.1",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.0",
+    "moment-timezone": "^0.5.43",
     "mongoose": "^6.9.1",
+    "morgan": "^1.10.0",
     "mysql": "^2.18.1",
+    "openai": "^3.2.1",
     "swagger-jsdoc": "^6.0.0",
     "swagger-ui-express": "^4.6.2",
     "xss-clean": "^0.1.1"

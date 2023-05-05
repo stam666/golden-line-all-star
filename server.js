@@ -10,7 +10,7 @@ const hpp = require('hpp');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
 const bodyParser = require('body-parser');
-
+const {customLogger} = require('./middleware/logger');
 const connectDB = require('./config/db');
 
 dotenv.config({path: './config/config.env'});
@@ -34,7 +34,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:5000/api/v1',
+        url: 'http://localhost:5001/api/v1',
       },
     ],
   },
@@ -46,13 +46,14 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(mongoSanitize());
 app.use(helmet());
 app.use(xss());
 app.use(limiter);
+app.use(customLogger);
 app.use(hpp());
 
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));

@@ -106,21 +106,20 @@ exports.updateReservation = async (req, res, next) => {
       });
     }
 
-    if (reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (
+      reservation.user.toString() !== req.user.id &&
+      req.user.role !== 'admin'
+    ) {
       return res.status(401).json({
         success: false,
         message: `User ${req.user.id} is not authorized to update this reservation`,
       });
     }
 
-    reservation = await Reservation.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    reservation = await Reservation.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     res.status(200).json({success: true, data: reservation});
   } catch (err) {
@@ -143,7 +142,10 @@ exports.deleteReservation = async (req, res, next) => {
       });
     }
 
-    if (reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (
+      reservation.user.toString() !== req.user.id &&
+      req.user.role !== 'admin'
+    ) {
       return res.status(401).json({
         success: false,
         message: `User ${req.user.id} is not authorized to delete this reservation`,
