@@ -20,16 +20,16 @@ router
   .route('/')
   .get(getRestaurants)
   .post(protect, authorize('admin', 'owner'), createRestaurant);
-router
-  .route('/stats/:id')
-  .get(protect, authorize('admin', 'owner'), getRestaurantStat);
-router.route('/stats').get(protect, authorize('admin'), getAllRestaurantsStat);
+router.route('/stats/:id').get(getRestaurantStat);
+// .get(protect, authorize('admin', 'owner'), getRestaurantStat);
+router.route('/stats').get(getAllRestaurantsStat);
+// router.route('/stats').get(protect, authorize('admin'), getAllRestaurantsStat);
 router
   .route('/:id')
   .get(getRestaurant)
   .put(protect, authorize('admin'), updateRestaurant)
   .delete(protect, authorize('admin'), deleteRestaurant)
-  .patch(protect, authorize('admin'), setIsSponsered);
+  .patch(protect, authorize('admåin'), setIsSponsered);
 router.route('/menu').post(randomMenu);
 
 module.exports = router;

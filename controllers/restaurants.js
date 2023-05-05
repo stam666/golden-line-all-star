@@ -156,97 +156,6 @@ exports.setIsSponsered = async (req, res, next) => {
   }
 };
 
-exports.getRestaurantStat = async (req, res) => {
-  try {
-    const restaurantId = req.params.id;
-    const allVisitors = await VisitLog.countDocuments({
-      restaurant: mongoose.Types.ObjectId(restaurantId),
-    });
-
-    const lastMonthVisitors = await VisitLog.countDocuments({
-      restaurant: mongoose.Types.ObjectId(restaurantId),
-      createdAt: {$gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)},
-    });
-    const lastWeekVisitors = await VisitLog.countDocuments({
-      restaurant: mongoose.Types.ObjectId(restaurantId),
-      createdAt: {$gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)},
-    });
-
-    const topVisitors = await VisitLog.aggregate([
-      {$match: {restaurant: mongoose.Types.ObjectId(restaurantId)}},
-      {$group: {_id: '$user', count: {$sum: 1}}},
-      {$sort: {count: -1}},
-      {$limit: 3},
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'user',
-        },
-      },
-      {$unwind: '$user'},
-      {$project: {_id: 0, user: {name: 1, email: 1}, count: 1}},
-    ]);
-
-    res.json({
-      allVisitors,
-      lastMonthVisitors,
-      lastWeekVisitors,
-      topVisitors,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({message: err.message});
-  }
-};
-
-exports.getAllRestaurantsStat = async (req, res) => {
-  try {
-    const result = await VisitLog.aggregate([
-      {
-        $match: {user: {$ne: null}},
-      },
-      {
-        $group: {
-          _id: {restaurant: '$restaurant', user: '$user'},
-          count: {$sum: 1},
-        },
-      },
-      {$sort: {'_id.restaurant': 1, count: -1}},
-      {
-        $group: {
-          _id: '$_id.restaurant',
-          users: {$push: {user: '$_id.user', count: '$count'}},
-        },
-      },
-      {
-        $lookup: {
-          from: 'restaurants',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'restaurant',
-        },
-      },
-      {$unwind: '$restaurant'},
-      {
-        $project: {
-          _id: 0,
-          restaurant: '$restaurant.name',
-          users: {$slice: ['$users', 3]},
-          totalVisitors: {$sum: '$users.count'},
-        },
-      },
-      {$sort: {totalVisitors: -1}},
-    ]);
-
-    res.json(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({message: err.message});
-  }
-};
-
 exports.randomMenu = async (req, res, next) => {
   const ingredient = req.body.ingredient;
   try {
@@ -281,5 +190,282 @@ exports.randomMenu = async (req, res, next) => {
   } catch (err) {
     console.log(err);
     res.status(400).json({success: false});
+  }
+};
+
+const getLast24HoursDateRange = () => {
+  const end = new Date();
+  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+  return {start, end};
+};
+
+const getLastWeekDateRange = () => {
+  const end = new Date();
+  const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+  return {start, end};
+};
+
+const getLastMonthDateRange = () => {
+  const end = new Date();
+  const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+  return {start, end};
+};
+
+const generateCompleteDataArray = (
+  visitorsData,
+  startDate,
+  endDate,
+  groupByHour = false
+) => {
+  const completeData = [];
+  let currentDate = new Date(startDate);
+  const visitorsDataMap = new Map(
+    visitorsData.map((entry) => [entry._id, entry.count])
+  );
+
+  while (currentDate <= endDate) {
+    const isoString = currentDate.toISOString();
+    const formattedDate = groupByHour
+      ? isoString.slice(0, 13) + ':00'
+      : isoString.slice(0, 10);
+
+    const count = visitorsDataMap.get(formattedDate) || 0;
+
+    completeData.push({_id: formattedDate, count});
+
+    if (groupByHour) {
+      currentDate.setHours(currentDate.getHours() + 1);
+    } else {
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  }
+
+  return completeData;
+};
+
+const getVisitorsByDateRange = async (
+  restaurantId,
+  start,
+  end,
+  groupByHour = false
+) => {
+  const groupById = groupByHour
+    ? {
+        $dateToString: {
+          format: '%Y-%m-%dT%H:00',
+          date: '$createdAt',
+          timezone: 'UTC',
+        },
+      }
+    : {
+        $dateToString: {
+          format: '%Y-%m-%d',
+          date: '$createdAt',
+          timezone: 'UTC',
+        },
+      };
+
+  const visitors = await VisitLog.aggregate([
+    {
+      $match: {
+        restaurant: mongoose.Types.ObjectId(restaurantId),
+        createdAt: {$gte: start, $lt: end},
+      },
+    },
+    {
+      $group: {
+        _id: groupById,
+        count: {$sum: 1},
+      },
+    },
+    {$sort: {_id: 1}},
+  ]);
+
+  const completeVisitorsData = generateCompleteDataArray(
+    visitors,
+    start,
+    end,
+    groupByHour
+  );
+  return completeVisitorsData;
+};
+
+exports.getRestaurantStat = async (req, res) => {
+  try {
+    const restaurantId = req.params.id;
+
+    const allVisitors = await VisitLog.countDocuments({
+      restaurant: mongoose.Types.ObjectId(restaurantId),
+    });
+
+    const dailyVisitors = await VisitLog.countDocuments({
+      restaurant: mongoose.Types.ObjectId(restaurantId),
+      createdAt: {$gte: new Date(Date.now() - 24 * 60 * 60 * 1000)},
+    });
+
+    const lastMonthVisitors = await VisitLog.countDocuments({
+      restaurant: mongoose.Types.ObjectId(restaurantId),
+      createdAt: {$gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)},
+    });
+    const lastWeekVisitors = await VisitLog.countDocuments({
+      restaurant: mongoose.Types.ObjectId(restaurantId),
+      createdAt: {$gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)},
+    });
+
+    const last24HoursDateRange = getLast24HoursDateRange();
+    const lastWeekDateRange = getLastWeekDateRange();
+    const lastMonthDateRange = getLastMonthDateRange();
+
+    const last24HoursVisitorsData = await getVisitorsByDateRange(
+      restaurantId,
+      last24HoursDateRange.start,
+      last24HoursDateRange.end,
+      true // group data by hour
+    );
+
+    const lastWeekVisitorsData = await getVisitorsByDateRange(
+      restaurantId,
+      lastWeekDateRange.start,
+      lastWeekDateRange.end
+    );
+
+    const lastMonthVisitorsData = await getVisitorsByDateRange(
+      restaurantId,
+      lastMonthDateRange.start,
+      lastMonthDateRange.end
+    );
+
+    const topVisitors = await VisitLog.aggregate([
+      {$match: {restaurant: mongoose.Types.ObjectId(restaurantId)}},
+      {$group: {_id: '$user', count: {$sum: 1}}},
+      {$sort: {count: -1}},
+      {$limit: 3},
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {$unwind: '$user'},
+      {$project: {_id: 0, user: {name: 1, email: 1}, count: 1}},
+    ]);
+
+    res.json({
+      allVisitors,
+      daily: {
+        labels: last24HoursVisitorsData.map((entry) => entry._id),
+        data: last24HoursVisitorsData.map((entry) => entry.count),
+        count: dailyVisitors,
+      },
+      weekly: {
+        labels: lastWeekVisitorsData.map((entry) => entry._id),
+        data: lastWeekVisitorsData.map((entry) => entry.count),
+        count: lastWeekVisitors,
+      },
+      monthly: {
+        labels: lastMonthVisitorsData.map((entry) => entry._id),
+        data: lastMonthVisitorsData.map((entry) => entry.count),
+        count: lastMonthVisitors,
+      },
+      topVisitors,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message: err.message});
+  }
+};
+
+exports.getAllRestaurantsStat = async (req, res) => {
+  try {
+    const restaurants = await Restaurant.find();
+    const allRestaurantsStats = [];
+    for (const restaurant of restaurants) {
+      const restaurantId = restaurant._id;
+      const allVisitors = await VisitLog.countDocuments({
+        restaurant: mongoose.Types.ObjectId(restaurantId),
+      });
+
+      const dailyVisitors = await VisitLog.countDocuments({
+        restaurant: mongoose.Types.ObjectId(restaurantId),
+        createdAt: {$gte: new Date(Date.now() - 24 * 60 * 60 * 1000)},
+      });
+
+      const lastMonthVisitors = await VisitLog.countDocuments({
+        restaurant: mongoose.Types.ObjectId(restaurantId),
+        createdAt: {$gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)},
+      });
+      const lastWeekVisitors = await VisitLog.countDocuments({
+        restaurant: mongoose.Types.ObjectId(restaurantId),
+        createdAt: {$gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)},
+      });
+
+      const last24HoursDateRange = getLast24HoursDateRange();
+      const lastWeekDateRange = getLastWeekDateRange();
+      const lastMonthDateRange = getLastMonthDateRange();
+
+      const last24HoursVisitorsData = await getVisitorsByDateRange(
+        restaurantId,
+        last24HoursDateRange.start,
+        last24HoursDateRange.end,
+        true // group data by hour
+      );
+
+      const lastWeekVisitorsData = await getVisitorsByDateRange(
+        restaurantId,
+        lastWeekDateRange.start,
+        lastWeekDateRange.end
+      );
+
+      const lastMonthVisitorsData = await getVisitorsByDateRange(
+        restaurantId,
+        lastMonthDateRange.start,
+        lastMonthDateRange.end
+      );
+
+      const topVisitors = await VisitLog.aggregate([
+        {$match: {restaurant: mongoose.Types.ObjectId(restaurantId)}},
+        {$group: {_id: '$user', count: {$sum: 1}}},
+        {$sort: {count: -1}},
+        {$limit: 3},
+        {
+          $lookup: {
+            from: 'users',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        {$unwind: '$user'},
+        {$project: {_id: 0, user: {name: 1, email: 1}, count: 1}},
+      ]);
+      allRestaurantsStats.push({
+        name: restaurant.name,
+        statistics: {
+          allVisitors,
+          daily: {
+            labels: last24HoursVisitorsData.map((entry) => entry._id),
+            data: last24HoursVisitorsData.map((entry) => entry.count),
+            count: dailyVisitors,
+          },
+          weekly: {
+            labels: lastWeekVisitorsData.map((entry) => entry._id),
+            data: lastWeekVisitorsData.map((entry) => entry.count),
+            count: lastWeekVisitors,
+          },
+          monthly: {
+            labels: lastMonthVisitorsData.map((entry) => entry._id),
+            data: lastMonthVisitorsData.map((entry) => entry.count),
+            count: lastMonthVisitors,
+          },
+          topVisitors,
+        },
+      });
+    }
+    res.json(allRestaurantsStats);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message: err.message});
   }
 };
