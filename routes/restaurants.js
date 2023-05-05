@@ -20,10 +20,10 @@ router.use('/:restaurantId/reservations', reservationRouter);
 router
   .route('/')
   .get(getRestaurants) //
-  .post(protect, authorize('admin', 'owner'), createRestaurant);
+  .post(protect, authorize('admin'), createRestaurant);
 router
   .route('/stats/:id')
-  .get(protect, authorize('admin', 'owner'), getRestaurantStat);
+  .get(protect, authorize('admin'), getRestaurantStat);
 router
   .route('/overall-stats')
   .get(protect, authorize('admin'), getOverallRestaurantsStat);
