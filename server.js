@@ -45,7 +45,7 @@ const swaggerDocs = swaggerJsDoc(swaggerOptions);
 const app = express();
 
 const corsOptions = {
-  origin: ['http://localhost:3000', '*'],
+  origin: ['http://localhost:3000'],
   credentials: true,
   methods: 'POST, OPTIONS, GET, PUT, DELETE, PATCH',
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -68,7 +68,7 @@ app.use('/api/v1/auth', auth);
 app.use('/api/v1/restaurants', restaurants);
 app.use('/api/v1/reservations', reservations);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 const server = app.listen(
   PORT,
