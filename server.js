@@ -9,6 +9,7 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
+const bodyParser = require('body-parser');
 
 const connectDB = require('./config/db');
 
@@ -44,6 +45,8 @@ const swaggerDocs = swaggerJsDoc(swaggerOptions);
 const app = express();
 
 app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(mongoSanitize());

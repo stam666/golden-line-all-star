@@ -29,7 +29,7 @@ exports.getRestaurants = async (req, res, next) => {
     }
 
     //sponsored sort
-    query.sort({isSporsored: -1});
+    query.sort({isSponsored: -1});
 
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 25;
@@ -127,15 +127,6 @@ exports.deleteRestaurant = async (req, res, next) => {
 
 exports.setIsSponsered = async (req, res, next) => {
   try {
-    let isSponsored;
-    if (req.body.isSporsored === true) {
-      isSponsored = true;
-    } else if (req.body.isSponsored === false) {
-      isSponsored = false;
-    } else {
-      return res.json({message: 'can be only boolean value'});
-    }
-
     const restaurant = await Restaurant.findByIdAndUpdate(
       req.params.id,
       {isSponsored: req.body.isSponsored},

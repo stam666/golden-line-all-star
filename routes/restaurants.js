@@ -36,8 +36,6 @@ module.exports = router;
 *       required:
 *         - name
 *         - address
-*         - open
-*         - close
 *       properties:
 *         id:
 *           type: string
@@ -59,13 +57,13 @@ module.exports = router;
 *         close:
 *           type: number
 *           description: closing hour
-*         example:
-*           id: 609bda561452242d88d36e37
-*           name: Happy Restaurant 
-*           address: 121 ถ.สุขุมวิท
-*           tel: 0812345678
-*           open: 8
-*           close: 16
+*       example:
+*         id: 609bda561452242d88d36e37
+*         name: Happy Restaurant 
+*         address: 121 ถ.สุขุมวิท
+*         tel: '0812345678'
+*         open: 8
+*         close: 16
 */
 /**
 * @swagger
@@ -121,9 +119,9 @@ module.exports = router;
 *     requestBody:
 *       required: true
 *       content:
-*       application/json:
-*         schema:
-*           $ref: '#/components/schemas/Restaurant'
+*         application/json:
+*           schema:
+*             $ref: '#/components/schemas/Restaurant'
 *     responses:
 *       201:
 *         description: The restaurant was successfully created
