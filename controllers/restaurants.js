@@ -1,4 +1,6 @@
 const Restaurant = require('../models/Restaurant.js');
+const User = require('../models/User.js');
+const VisitLog = require('../models/VisitLog.js');
 
 exports.getRestaurants = async (req, res, next) => {
   try {
@@ -74,6 +76,9 @@ exports.getRestaurant = async (req, res, next) => {
     if (!restaurant) {
       return res.status(400).json({success: false});
     }
+    
+    await VisitLog.create({restaurant: req.params.id});
+
     res.status(200).json({success: true, data: restaurant});
   } catch (err) {
     res.status(400).json({success: false});
