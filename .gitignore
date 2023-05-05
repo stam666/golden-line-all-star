@@ -1,4 +1,15 @@
-node_modules/*
+# Ignore Node.js dependencies
+node_modules/
+
+# Ignore configuration files
 config/config.env
-package.json
-package-lock.json
+*.env
+
+# Ignore IDE-specific files
+.vscode/
+
+# Ignore log files
+*.log
+
+# Ignore macOS-specific files
+.DS_Store
