@@ -44,7 +44,14 @@ const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: ['http://localhost:3000', '*'],
+  credentials: true,
+  methods: 'POST, OPTIONS, GET, PUT, DELETE, PATCH',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.json());

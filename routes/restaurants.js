@@ -29,7 +29,7 @@ router
   .get(getRestaurant)
   .put(protect, authorize('admin'), updateRestaurant)
   .delete(protect, authorize('admin'), deleteRestaurant)
-  .patch(protect, authorize('admåin'), setIsSponsered);
+  .patch(protect, authorize('admin'), setIsSponsered);
 router.route('/menu').post(randomMenu);
 
 module.exports = router;
