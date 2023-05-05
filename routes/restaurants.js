@@ -19,7 +19,7 @@ const reservationRouter = require('./reservations');
 router.use('/:restaurantId/reservations', reservationRouter);
 router
   .route('/')
-  .get(getRestaurants)
+  .get(getRestaurants) //
   .post(protect, authorize('admin', 'owner'), createRestaurant);
 router
   .route('/stats/:id')
@@ -30,7 +30,7 @@ router
 router.route('/stats').get(protect, authorize('admin'), getAllRestaurantsStat);
 router
   .route('/:id')
-  .get(getRestaurant)
+  .get(getRestaurant) //
   .put(protect, authorize('admin'), updateRestaurant)
   .delete(protect, authorize('admin'), deleteRestaurant)
   .patch(protect, authorize('admin'), setIsSponsered);

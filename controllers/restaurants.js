@@ -166,20 +166,18 @@ exports.randomMenu = async (req, res, next) => {
     let conversationLog = [
       {
         role: 'system',
-        content:
-          'You are a chef chatbot who will recommend the food from ingredient and return into a list of 3 foods (including Thai, Italian, Japanese, Chinese). please make it short and finish in 5 second',
+        content: process.env.START_PROMPT,
       },
     ];
     conversationLog.push({
       role: 'user',
       content: ingredient,
     });
-
     const result = await openai
       .createChatCompletion({
         model: 'gpt-3.5-turbo',
         messages: conversationLog,
-        max_tokens: 2000, // limit token usage
+        max_tokens: 2000,
       })
       .catch((error) => {
         console.log(`OPENAI ERR: ${error}`);
@@ -301,7 +299,6 @@ const getVisitorsByDateRange = async (
 exports.getRestaurantStat = async (req, res) => {
   try {
     const restaurantId = req.params.id;
-
     const allVisitors = await VisitLog.countDocuments({
       restaurant: mongoose.Types.ObjectId(restaurantId),
     });

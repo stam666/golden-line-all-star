@@ -32,7 +32,7 @@ exports.register = async (req, res, next) => {
       name,
       email,
       password,
-      phoneNumber,
+      tel: phoneNumber,
       role,
     });
     sendTokenResponse(user, 200, res);
@@ -73,11 +73,6 @@ exports.login = async (req, res, next) => {
       msg: 'Cannot convert email or password to string',
     });
   }
-};
-
-exports.getMe = async (req, res, next) => {
-  const user = await User.findById(req.user.id);
-  res.status(200).json({success: true, data: user});
 };
 
 //@desc Log user out / clear cookie

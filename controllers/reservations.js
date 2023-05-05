@@ -3,7 +3,6 @@ const Restaurant = require('../models/Restaurant');
 
 exports.getReservations = async (req, res, next) => {
   let query;
-
   if (req.query.role !== 'admin') {
     query = Reservation.find({user: req.user.id}).populate({
       path: 'restaurant',
