@@ -16,13 +16,10 @@ const sendTokenResponse = (user, statusCode, res) => {
 
   res.status(statusCode).cookie('token', token, options).json({
     sucess: true,
-    //add for frontend
     _id: user._id,
     name: user.name,
     email: user.email,
     phoneNumber: user.phoneNumber,
-    //end for frontend
-
     token,
   });
 };
@@ -38,9 +35,6 @@ exports.register = async (req, res, next) => {
       phoneNumber,
       role,
     });
-
-    // const token = user.getSignedJwtToken();
-    // res.status(200).json({success: true, token});
     sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(400).json({success: false});
@@ -51,7 +45,6 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const {email, password} = req.body;
-
     if (!email || !password) {
       return res
         .status(400)
